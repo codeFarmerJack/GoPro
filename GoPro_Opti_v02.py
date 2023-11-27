@@ -42,43 +42,19 @@ def dataOpt(rawData, speed, accLong, accLat, jerk):
 def custom_date_parser(x):
     return pd.to_datetime(x, format = '%H:%M:%S', errors='coerce')
 
-"""
-def plot_dynamic_subplot(x, *y_data):
-    if len(y_data) % 2 != 0:
-        raise ValueError('Number of y_data arguments should be even.')
-    
-    num_plots = len(y_data) // 2
+def draw_vertical_lines(ax, x_values, label):
+    for x_value in x_values:
+        ax.axvline(x = x_value, color = 'r', linestyle = '--', label = label)
 
-    fig, axes = plt.subplots(num_plots, 1, sharex = True, figsize = (15, 2 * num_plots))
+def on_plot_click(sel):
+    if sel.event.name == 'button_press_event':
+        global initial_x_value
+        initial_x_value = sel.target[0]
+        for ax in plt.gcf().get_axes():
+            ax.lines = [line for line in ax.lines if 'Vertical Line' not in line.get_label()]
+            draw_vertical_lines(ax, [initial_x_value] * 8, 'Vertical Line')
+        plt.gcf().canvas.draw()
 
-    if num_plots == 1:
-        axes = [axes]   # Ensure axes is a list even for a single plot
-
-    # Plot data on each subplot
-    for i in range(0, len(y_data), 2):
-        if i % 2 == 0:
-
-        
-
-    # Set common X-axis label
-    # axes[-1].set_xlabel('X-axis')
-    
-    for i, y_value in enumerate(y_data):
-        axes[i].plot(x, y_value)
-        axes[i].set_xlabel('X-axis')
-        axes[i].set_ylabel(f'Y-axis {i + 1}')
-        axes[i].legend()
-    
-    
-    # Adjust layout to prevent clipping of titles
-    plt.tight_layout()
-
-    # Add labels to data points 
-    mplcursors.cursor(axes).connect('add', 
-                                    lambda sel: sel.annotation.set_text(f'X: ({sel.target[0]:.2f}, Y: {sel.target[1]:.2f})'),
-                                    )
-    plt.show()
-"""
 
 if __name__ == '__main__':
 
@@ -101,7 +77,7 @@ if __name__ == '__main__':
     jerkRT = "jerkRT"
     
     # data folder path
-    data_folder_path = r"C:\AAD\02_Coding\04_python\01_Data"
+    data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/01_Data"
     os.chdir(data_folder_path)
     
     gopro = None
@@ -122,62 +98,41 @@ if __name__ == '__main__':
 
     # plot_dynamic_subplot(optimizedRT['date_01'], optimizedRT[accLatRT], optimizedRT['acclLatOptFilt'])
     
+# initial_x_value = 5
 
-    plt.figure(figsize=(15, 20))
+# Determine the common date range
+common_date_range = pd.to_datetime(np.intersect1d(optimizedGopro["date_01"], optimizedRT["date_01"]))
 
-    plt.subplot(4,2,1)
-    plt.plot(optimizedGopro["date_01"], optimizedGopro[speedGopro], label="speedGopro")
-    plt.plot(optimizedGopro["date_01"], optimizedGopro['speedOpt'], label="speedOpt")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
+plt.figure(figsize=(15, 10))
 
-    plt.subplot(4,2,3)
-    plt.plot(optimizedGopro["date_01"], optimizedGopro[accLongGopro], label="accLongGopro")
-    plt.plot(optimizedGopro["date_01"], optimizedGopro['accLongOptFilt'], label="accLongOptFilt")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
+# Define the subplot layout
+subplot_layout = [
+    (optimizedGopro, 'date_01', optimizedGopro[speedGopro], 'speedGopro', 'speedOpt'),
+    (optimizedRT, 'date_01', optimizedRT[speedRT], 'speedRT', 'speedOpt'),
+    (optimizedGopro, 'date_01', optimizedGopro[accLongGopro], 'accLongGopro', 'accLongOptFilt'),
+    (optimizedRT, 'date_01', optimizedRT[accLongRT], 'accLongRT', 'accLongOptFilt'),
+    (optimizedGopro, 'date_01', optimizedGopro[accLatGopro], 'accLatGopro', 'accLatOptFilt'),
+    (optimizedRT, 'date_01', optimizedRT[accLatRT], 'accLatRT', 'accLatOptFilt'),
+    (optimizedGopro, 'date_01', optimizedGopro[jerkGopro], 'jerkGopro', 'jerkOptFilt'),
+    (optimizedRT, 'date_01', optimizedRT[jerkRT], 'jerkRT', 'jerkOptFilt')
+]
 
-    plt.subplot(4,2,5)
-    plt.plot(optimizedGopro["date_01"], optimizedGopro[accLatGopro], label="accLatGopro")
-    plt.plot(optimizedGopro["date_01"], optimizedGopro['accLatOptFilt'], label="accLatOptFilt")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
+# Iterate through the subplot layout
+for i, (df, date_column, data, label, filtered_data) in enumerate(subplot_layout, start=1):
+    plt.subplot(4, 2, i)
 
-    plt.subplot(4,2,7)
-    plt.plot(optimizedGopro["date_01"], optimizedGopro[jerkGopro], label="jerkGopro")
-    plt.plot(optimizedGopro["date_01"], optimizedGopro['jerkOptFilt'], label="jerkOptFilt")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
-
-    plt.subplot(4,2,2)
-    plt.plot(optimizedRT["date_01"], optimizedRT[speedRT], label="speedRT")
-    plt.plot(optimizedRT["date_01"], optimizedRT['speedOpt'], label="speedOpt")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
-
-    plt.subplot(4,2,4)
-    plt.plot(optimizedRT["date_01"], optimizedRT[accLongRT], label="accLongRT")
-    plt.plot(optimizedRT["date_01"], optimizedRT['accLongOptFilt'], label="accLongOptFilt")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
-
-    plt.subplot(4,2,6)
-    plt.plot(optimizedRT["date_01"], optimizedRT[accLatRT], label="accLatRT")
-    plt.plot(optimizedRT["date_01"], optimizedRT['accLatOptFilt'], label="accLatOptFiltRT")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
-
-    plt.subplot(4,2,8)
-    plt.plot(optimizedRT["date_01"], optimizedRT[jerkRT], label="jerkRT")
-    plt.plot(optimizedRT["date_01"], optimizedRT['jerkOptFilt'], label="jerkOptFilt")
-    plt.legend(fontsize=5)
-    plt.legend(loc='upper left')
-
-
-    plt.tight_layout()
-    # Add labels to data points 
-    """mplcursors.cursor(axes).connect('add', 
-                                    lambda sel: sel.annotation.set_text(f'X: ({sel.target[0]:.2f}, Y: {sel.target[1]:.2f})'),
-                                    )"""
+    # Select the common date range for each subplot
+    common_data = data[df[date_column].isin(common_date_range)]
+    common_filtered_data = df[filtered_data][df[date_column].isin(common_date_range)]
     
-    plt.show()
+    plt.plot(common_date_range, common_data, label=label)
+    plt.plot(common_date_range, common_filtered_data, label=f'{filtered_data}Opt')
+    plt.legend(fontsize=5)
+    plt.legend(loc='upper left')
+
+    # Draw vertical lines on each subplot
+    # for ax in plt.gcf().get_axes():
+    #     draw_vertical_lines(ax, x_values=[initial_x_value] * 8, label='Vertical Line')
+
+plt.tight_layout()
+plt.show()
