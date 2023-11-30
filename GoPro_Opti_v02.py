@@ -52,6 +52,32 @@ def on_plot_click(event):
     global initial_x_value
     if event.inaxes is not None and event.button == 1:
         initial_x_value = event.xdata
+
+        # Iterate through the subplot layout
+        for df, date_column, data, label, filtered_data in subplot_layout:
+            
+            """if initial_x_value in df[date_column].values:
+                y_value_data = df[data][df[date_column] == initial_x_value].values[0]
+                y_value_filtered = df[filtered_data][df[date_column] == initial_x_value].values[0]
+            else:
+                # If initial_x_value is not in the DataFrame, perform interpolation
+                y_value_data = np.interp(initial_x_value, df[date_column], df[data])
+                y_value_filtered = np.interp(initial_x_value, df[date_column], df[filtered_data])
+            """
+            # print(y_value_data)
+            # print(y_value_filtered)
+            
+            # Update text annotation at the bottom right of each subplot
+            # subplot_index = i - 1
+            # ax = plt.subplot(4, 2, i)
+            # text_annotation = f'{label}: {y_value_data:.2f} \n{filtered_data}Opt: {y_value_filtered:.2f}'
+
+            # Remove previous annotations
+            # for annotation in ax.texts:
+            #     annotation.remove()
+            # Add new annotation
+            # ax.annotate(text_annotation, xy=(1, 0), xycoords='axes fraction', ha = 'right', va = 'bottom')
+
         for ax in plt.gcf().get_axes():
             # Remove the existing cursor with "cursor" label
             existing_lines = [line for line in ax.lines if 'cursor' in line.get_label()]
@@ -60,6 +86,14 @@ def on_plot_click(event):
             # Draw a new cursor at the updated x-value
             draw_cursor(ax, x_values=[initial_x_value])
             
+            if initial_x_value in df[date_column].values:
+                y_value_data = df[data][df[date_column] == initial_x_value].values[0]
+                y_value_filtered = df[filtered_data][df[date_column] == initial_x_value].values[0]
+            else:
+                # If initial_x_value is not in the DataFrame, perform interpolation
+                y_value_data = np.interp(initial_x_value, df[date_column], df[data])
+                y_value_filtered = np.interp(initial_x_value, df[date_column], df[filtered_data])
+
         plt.gcf().canvas.draw()
 
 if __name__ == '__main__':
