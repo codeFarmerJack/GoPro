@@ -64,6 +64,9 @@ def on_plot_click(event):
             
         plt.gcf().canvas.draw()
 
+def save_dataframe_to_csv(dataframe, file_path):
+    dataframe.to_csv(file_path, index = True)
+    
 if __name__ == '__main__':
 
     # data file sample frequency and name
@@ -87,6 +90,9 @@ if __name__ == '__main__':
     # data folder path
     data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/01_Data"
     os.chdir(data_folder_path)
+    # Specify the file path along with the file name
+    csv_file_path_1 = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/01_Data/optimizedGopro.csv"
+    csv_file_path_2 = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/01_Data/optimizedRT.csv"
     
     gopro = None
     rt = None
@@ -104,6 +110,10 @@ if __name__ == '__main__':
     optimizedGopro = dataOpt(gopro, speedGopro, accLongGopro, accLatGopro, jerkGopro)
     optimizedRT = dataOpt(rt, speedRT, accLongRT, accLatRT, jerkRT)
 
+    # Save the filtered data to a csv file
+    save_dataframe_to_csv(optimizedGopro, csv_file_path_1)
+    save_dataframe_to_csv(optimizedRT, csv_file_path_2)
+    
     # plot_dynamic_subplot(optimizedRT['date_01'], optimizedRT[accLatRT], optimizedRT['acclLatOptFilt'])
     
     target_x_value = None
@@ -147,3 +157,5 @@ if __name__ == '__main__':
 
     plt.tight_layout()
     plt.show()
+
+    
