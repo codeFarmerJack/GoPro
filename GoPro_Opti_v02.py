@@ -53,8 +53,8 @@ def on_plot_click(event):
     if event.inaxes is not None and event.button == 1:
         
         target_x_value = event.xdata
-
-        for ax in plt.gcf().get_axes():
+        
+        for ax, layout in zip(plt.gcf().get_axes(), subplot_layout):
             # Remove the existing cursor with "cursor" label
             existing_lines = [line for line in ax.lines if 'cursor' in line.get_label()]
             for line in existing_lines:
@@ -62,7 +62,31 @@ def on_plot_click(event):
             # Draw a new cursor at the updated x-value
             draw_cursor(ax, x_values=[target_x_value])
             
+            # Update the bottom right annotation
+            update_annotation(ax, layout, target_x_value)    
         plt.gcf().canvas.draw()
+
+def update_annotation(ax, layout, target_x_value):
+    if ax is not None:
+        df, date_column, data, label, filtered_data = layout
+        
+        # Find the subplot layout associated with the current axes
+        current_layout = [layout for layout in subplot_layout if layout[0].axes is ax]
+        if not current_layout:
+            return
+        df, date_column, data, label, filtered_data = current_layout[0]
+        
+        # Find the index of the closest value
+        closest_index = (df[date_column] - target_x_value).abs().idxmin()
+        
+        # Retrieve y values for data and filtered data
+        y_value_data = df.loc[closest_index, data]
+        y_value_filtered = df.loc[closest_index, filtered_data]  # Corrected variable name
+        
+        annotation_text = f'{label}: {y_value_data:.2f}\n{filtered_data}Opt: {y_value_filtered:.2f}'  # Corrected variable name
+        plt.annotate(annotation_text, xy=(1, 0), xycoords='axes fraction', ha='right', va='bottom')
+        plt.gcf().canvas.draw()
+
 
 if __name__ == '__main__':
 
