@@ -82,10 +82,10 @@ if __name__ == '__main__':
 
     
     # data folder path
-    data_folder_path = r"C:\AAD\03_Projects\01_Benchmarking\03_RawData\CW2349_XpengG6"
+    data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro"
     os.chdir(data_folder_path)
     # Specify the file path along with the file name
-    csv_file_path_1 = r"C:\AAD\03_Projects\01_Benchmarking\03_RawData\CW2349_XpengG6\GX010188_HERO11 Black-GPS9.csv"
+    csv_file_path_1 = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/GX010188_HERO11 Black-GPS9.csv"
     # csv_file_path_2 = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/01_Data/optimizedRT.csv"
     
     gopro = None
