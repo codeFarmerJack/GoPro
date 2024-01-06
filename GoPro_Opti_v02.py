@@ -144,30 +144,36 @@ if __name__ == '__main__':
         save_dataframe_to_csv(optimizedGopro, csv_file_path_2)
         print('columns of optimizedGopro: ', optimizedGopro.columns)
     
-    target_x_value = None
+target_x_value = None
 
-    plt.figure(figsize=(15, 10))
+plt.figure(figsize=(15, 10))
 
-    # Connect the mouse click event to the callback function
-    plt.gcf().canvas.mpl_connect('button_press_event', on_plot_click)
-    # mplcursors.cursor(hover = True).connect('add', on_plot_click)
+# Connect the mouse click event to the callback function
+plt.gcf().canvas.mpl_connect('button_press_event', on_plot_click)
+# mplcursors.cursor(hover = True).connect('add', on_plot_click)
+
+# Assuming subplot_layout is your list of tuples
+subplot_layout = [
+    (optimizedGopro.index, optimizedGopro[fltSpdGopro], "fltSpdGopro"),
+    (optimizedGopro.index, optimizedGopro[fltAccLongGopro], 'fltAccLongGopro'),
+    (optimizedGopro.index, optimizedGopro[fltAccLatGopro], 'fltAccLatGopro')
+]
+
+for i, (date_column, filtered_data,flt_label) in enumerate(subplot_layout, start=1):
+    ax = plt.subplot(3, 1, i)
     
-    # Assuming subplot_layout is your list of tuples
-    subplot_layout = [
-        (optimizedGopro.index, optimizedGopro[fltSpdGopro], "fltSpdGopro"),
-        (optimizedGopro.index, optimizedGopro[fltAccLongGopro], 'fltAccLongGopro'),
-        (optimizedGopro.index, optimizedGopro[fltAccLatGopro], 'fltAccLatGopro')
-    ]
+     # Set x-axis ticks and labels
+    ax.set_xticks(date_column)
+    ax.set_xticklabels([f'{tick:.1f}' for tick in date_column])
 
-    for i, (date_column, filtered_data,flt_label) in enumerate(subplot_layout, start=1):
-        ax = plt.subplot(3, 1, i)
+    # Plot data and filtered data
+    ax.plot(date_column, filtered_data, label=flt_label)
 
-        # Plot data and filtered data
-        ax.plot(date_column, filtered_data, label=flt_label)
+    draw_cursor(ax, x_values=[date_column[0]])
 
-        draw_cursor(ax, x_values=[date_column[0]])
+    ax.legend(fontsize=5, loc='upper left')
+    ax.grid(False)
+    
 
-        ax.legend(fontsize=5, loc='upper left')
-
-    plt.tight_layout()
-    plt.show()
+plt.tight_layout()
+plt.show()
