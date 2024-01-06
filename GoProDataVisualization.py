@@ -94,10 +94,16 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    # data file sample frequency and name
+    # Input files
     GoPro_GPS_Data = 'GX020188_HERO11 Black-GPS9.csv'
     GoPro_ACCL_Data = 'GX020188_HERO11 Black-ACCL.csv'
+    
+    # Output files:
+    Combined_File = r'GX020188_HERO11 Black_Combined.csv'
+    filtered_combined_data_name = 'GX020188_HERO11 Black-Combined_filtered.csv'
+    
     SampleRate = 10         # 10 Hz
+    # Columns settings
     raw_time_col = 'cts'
     index_name = 'timestamp'
     veh_speed_col = 'GPS (2D) [m/s]'
@@ -108,9 +114,6 @@ if __name__ == '__main__':
     accel_long_flt_col = 'accel_long_flt'
     accel_lat_flt_col = 'accel_lat_flt'
     
-    # The combined file
-    Combined_File = r'GX020188_HERO11 Black_Combined.csv'
-
     # Read data from csv to DataFrame and rename columns names
     raw_data_GPS = read_file(raw_data_folder_path, GoPro_GPS_Data)
     raw_data_ACCL = read_file(raw_data_folder_path, GoPro_ACCL_Data)
@@ -118,12 +121,6 @@ if __name__ == '__main__':
     # Convert 'cts' column to timestamps
     raw_data_GPS_prep = timestamp_gen(raw_data_GPS, raw_time_col)
     raw_data_ACCL_prep = timestamp_gen(raw_data_ACCL, raw_time_col)
-
-    # Save the processed file for debug
-    Processed_RawDateGPS = 'GX020188_HERO11 Black-GPS9_Prep.csv'
-    Processed_RawDataACCL = 'GX020188_HERO11 Black-ACCL_Prep.csv'
-    save_dataframe_to_csv(raw_data_GPS, Processed_RawDateGPS)
-    save_dataframe_to_csv(raw_data_ACCL, Processed_RawDataACCL)
     
     # Extract speed, acceleration and combine them into one dataframe.
     speed_extraction = [veh_speed_col]
@@ -134,7 +131,7 @@ if __name__ == '__main__':
 
     combined_data_flt = data_filter(combined_data_raw, veh_speed_col, accel_long_col, accel_lat_col)
 
-    filtered_combined_data_name = 'GX020188_HERO11 Black-Combined_filtered.csv'
+    
     save_dataframe_to_csv(combined_data_flt, filtered_combined_data_name)
     
     target_x_value = None    
@@ -142,7 +139,7 @@ if __name__ == '__main__':
     # Columns to be visualized
     cols_to_visualize = [veh_speed_flt_kph_col, accel_long_flt_col, accel_lat_flt_col]
     
-    fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(10, 6), sharex=True)
+    fig, axes = plt.subplots(nrows=len(cols_to_visualize), ncols=1, figsize=(10, 6), sharex=True)
     
     # Connect the mouse click event to the callback function
     plt.gcf().canvas.mpl_connect('button_press_event', on_plot_click)
@@ -150,19 +147,20 @@ if __name__ == '__main__':
     
     for i, col in enumerate(cols_to_visualize):
         combined_data_flt[col].plot(ax=axes[i], label = col)
+        axes[i].legend([f'{col}'], loc='upper right')
         
-    # Manually set legend labels
-    axes[0].legend([f'veh_speed'], loc='upper right')
-    axes[1].legend([f'accel_long'], loc='upper right')
-    axes[2].legend([f'accel_lat'], loc='upper right')
+        units_dict = {veh_speed_flt_kph_col: 'kph', accel_long_flt_col:'m/s^2', accel_lat_flt_col:'m/s^2'}
+        axes[i].set_ylabel(f'{col} ({units_dict.get(col, "")})')
+        axes[i].grid(True, linestyle='--', alpha=0.7)
+        
+        if col == accel_long_flt_col:
+            axes[i].set_ylim(-4.1, 4.1)
+            axes[i].set_yticks([-4, -2, 0, 2, 4])
+        elif col == accel_lat_flt_col:
+            axes[i].set_ylim(-3.1, 3.1)
+            axes[i].set_yticks([-3, -2, 0, 2, 3])
     
-    # Change the y-axis labels to desired text
-    axes[0].set_ylabel('veh_speed (kph)')
-    axes[1].set_ylabel('accel_long m/s^2')
-    axes[2].set_ylabel('accel_lat m/s^2')
-
     axes[-1].set_xlabel('Time (s)')
-    
     
     plt.tight_layout()
     plt.show()
