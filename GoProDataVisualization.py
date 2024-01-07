@@ -1,25 +1,19 @@
-'''
-Pseudo Code
-GoPro raw data processing procedures:
-1. Read GPS data and Accelerometer into dataframes separately
-2. Convert 'cts' column of both dataframes into timestamps
-    Formula: = A2/1000/86400  
-    Format: 'mm:ss.000'
-3. Align the two dataframes according to the converted 'cts' columns
-    - How?
-4. Process vehicle speed, longitudinal acceleration, lateral acceleration with low-pass filter
-5. Plot the filtered signals
-6. Update the bar to faclitate data analysis.
-'''
+# Pseudo Code
+# GoPro raw data processing procedures:
+# 1. Read GPS data and Accelerometer into dataframes separately
+# 2. Convert 'cts' column of both dataframes into timestamps
+#     Formula: = A2/1000/86400  
+#     Format: 'mm:ss.000'
+# 3. Align the two dataframes according to the converted 'cts' columns
+# 4. Process vehicle speed, longitudinal acceleration, lateral acceleration with low-pass filter
+# 5. Plot the filtered signals
+# 6. Update the bar to faclitate data analysis.
 
 import os
 import pandas as pd
 import numpy as np
-from datetime import datetime as dt
-from datetime import timedelta
 from scipy.signal import butter, filtfilt
 import matplotlib.pyplot as plt
-from matplotlib.ticker import AutoLocator, FuncFormatter
 
 def timestamp_gen(raw_data, raw_time_col):
     raw_data['timestamp'] = raw_data[raw_time_col] / 1000 / 86400
@@ -52,9 +46,9 @@ def data_filter(rawData, veh_speed, accl_long, accl_lat):
     cutoff_freq = 0.07      # Adjust this cutoff frequency as needed
 
     # Filter the raw data 
-    filtered_spdGopro = butter_lowpass_filter(rawData[veh_speed], cutoff_freq, SampleRate, order=3)
-    filtered_accLongGopro = butter_lowpass_filter(rawData[accl_long], cutoff_freq, SampleRate, order=3)
-    filtered_accLatGopro = butter_lowpass_filter(rawData[accl_lat], cutoff_freq, SampleRate, order=3)
+    filtered_spdGopro = butter_lowpass_filter(rawData[veh_speed], cutoff_freq, sample_rate, order=3)
+    filtered_accLongGopro = butter_lowpass_filter(rawData[accl_long], cutoff_freq, sample_rate, order=3)
+    filtered_accLatGopro = butter_lowpass_filter(rawData[accl_lat], cutoff_freq, sample_rate, order=3)
     filtered_spdGoproKPH = filtered_spdGopro * 3.6
 
     # insert to the original DataFrame
@@ -87,6 +81,52 @@ def on_plot_click(event):
             
         plt.gcf().canvas.draw()
 
+# Format x-axis tick labels as 'mm::ss'
+def format_time_ticks(x, pos):
+    minutes = int(x // 60)
+    seconds = int(x % 60)
+    return f'{minutes:02d}:{seconds:02d}'
+
+def cnt_btwn_and_abv_thd(y_values, threshold_1, threshold_2, cooldown_duration = 10):
+    above_threshold_1_count = 0
+    above_threshold_2_count = 0
+    btwn_threshold_count = 0
+    max_above_threshold_1 = float('-inf')
+    state = 'below'     # Initial state
+    cooldown_counter = 0
+    
+    # Calculate the absolute of y_values
+    y_values_abs = abs(y_values)
+    
+    for value in y_values_abs:
+        if state == 'below' and value > threshold_1 and cooldown_counter == 0:
+            state = 'above'
+            above_threshold_1_count += 1
+            cooldown_counter = cooldown_duration    # Set cooldown counter to prevent immediate count
+            #print('value: ', value)
+            #print('above_threshold_1_count: ', above_threshold_1_count)
+        elif state == 'above' and value < threshold_1:
+            state = 'below'
+            if max_above_threshold_1 >= threshold_2 and cooldown_counter == 0:
+                above_threshold_2_count += 1
+                max_above_threshold_1 = 0   # reset the max_above_threshold_1 every time it is counted
+                cooldown_counter = cooldown_duration
+            #print('value: ', value)
+            #print('max_above_threshold_1: ', max_above_threshold_1)
+            #print('above_threshold_2_count: ', above_threshold_2_count)
+        elif state == 'above' and value > max_above_threshold_1:
+            max_above_threshold_1 = value
+        
+        # Update cooldown_counter 
+        cooldown_counter = max(0, cooldown_counter - 1)
+        
+    # Check the last state
+    if state == 'above' and max_above_threshold_1 > threshold_2:
+        above_threshold_2_count += 1
+        
+    btwn_threshold_count = above_threshold_1_count - above_threshold_2_count
+    
+    return btwn_threshold_count, above_threshold_2_count
 
 if __name__ == '__main__':
 
@@ -102,7 +142,7 @@ if __name__ == '__main__':
     Combined_File = r'GX020188_HERO11 Black_Combined.csv'
     filtered_combined_data_name = 'GX020188_HERO11 Black-Combined_filtered.csv'
     
-    SampleRate = 10         # 10 Hz
+    sample_rate = 10         # 10 Hz
     # Columns settings
     raw_time_col = 'cts'
     index_name = 'timestamp'
@@ -130,7 +170,16 @@ if __name__ == '__main__':
                                  left_index=True, right_index=True, how='inner')
 
     combined_data_flt = data_filter(combined_data_raw, veh_speed_col, accel_long_col, accel_lat_col)
+    
+    # Count the nubmer of times abs(accel_long) lies between (2, 4), and above 4
+    accel_long_thd_1 = 2    # Unit: m/s^2
+    accel_long_thd_2 = 4    # Unit: m/s^2 
+    accel_long_btwn_count, accel_long_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_long_flt_col], accel_long_thd_1, accel_long_thd_2)
 
+    # Count the nubmer of times abs(accel_long) lies between (2, 3), and above 3
+    accel_lat_thd_1 = 2     # Unit: m/s^2
+    accel_lat_thd_2 = 3     # Unit: m/s^2
+    accel_lat_btwn_count, accel_lat_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_lat_flt_col], accel_lat_thd_1, accel_lat_thd_2)
     
     save_dataframe_to_csv(combined_data_flt, filtered_combined_data_name)
     
@@ -158,9 +207,22 @@ if __name__ == '__main__':
             axes[i].set_yticks([-4, -2, 0, 2, 4])
         elif col == accel_lat_flt_col:
             axes[i].set_ylim(-3.1, 3.1)
-            axes[i].set_yticks([-3, -2, 0, 2, 3])
+            axes[i].set_yticks([-3, -2, -1, 0, 1, 2, 3])
     
-    axes[-1].set_xlabel('Time (s)')
+    axes[-1].set_xlabel('Time (mm:ss)')
+    
+    # Define dynamic legends for subplot 2 and subplot 3
+    text_legend_2 = axes[1].text(0.82, 0.12, '', transform=axes[1].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
+    text_legend_3 = axes[2].text(0.82, 0.12, '', transform=axes[2].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
+    
+    
+    # Update dynamic legends
+    text_legend_2.set_text(f'Accel_Long: '
+                           f'\n{accel_long_btwn_count} times between {accel_long_thd_1} and {accel_long_thd_2}' 
+                           f'\n{accel_long_above_count} times above {accel_long_thd_2}')
+    text_legend_3.set_text(f'Accel_Lat: '
+                           f'\n{accel_lat_btwn_count} times between {accel_lat_thd_1} and {accel_lat_thd_2}' 
+                           f'\n{accel_lat_above_count} times above {accel_lat_thd_2}')
     
     plt.tight_layout()
     plt.show()
