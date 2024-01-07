@@ -32,6 +32,12 @@ def read_file(data_foler, file_name):
     return file
 
 def butter_lowpass_filter(data, cutoff_freq, sample_rate, order=4):
+    # The filter order determines how steeply the filter attenuates frequencies beyond the cutoff
+    #   The higher filter order results in a steeper roll-off beyond the cutoff frequency but may
+    #   introduce more phase distortion.
+    #   A lower filter order provides a gentler roll-off but may not attenuate high frequencies 
+    #   as effectively.
+    # related link: https://www.elprocus.com/butterworth-filter-formula-and-calculations/
     nyquist = 0.5 * sample_rate     
     normal_cutoff = cutoff_freq / nyquist   
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
@@ -44,7 +50,10 @@ def data_filter(rawData, veh_speed, accl_long, accl_lat):
     # accl_lat: column name of the lateral acceleration to be filtered 
     
     cutoff_freq = 0.07      # Adjust this cutoff frequency as needed
-
+        # Increasing the cutoff frequency allows more higher-frequency components of the signal to 
+        #   pass through the filter, resulting in less filtering
+        # Decreasing the cutoff frequency filters out more high-frequency components, smoothing the
+        #   signal more aggressively
     # Filter the raw data 
     filtered_spdGopro = butter_lowpass_filter(rawData[veh_speed], cutoff_freq, sample_rate, order=3)
     filtered_accLongGopro = butter_lowpass_filter(rawData[accl_long], cutoff_freq, sample_rate, order=3)
@@ -134,7 +143,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = 'GX020188_HERO11'
+    common_file_name = r'GX020188_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -229,6 +238,7 @@ if __name__ == '__main__':
     plt.suptitle(common_file_name)
 
     plt.tight_layout()
+    
     plt.show()
 
     
