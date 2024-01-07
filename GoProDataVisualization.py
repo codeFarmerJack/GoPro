@@ -134,13 +134,14 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
+    common_file_name = 'GX020188_HERO11'
     # Input files
-    GoPro_GPS_Data = 'GX020188_HERO11 Black-GPS9.csv'
-    GoPro_ACCL_Data = 'GX020188_HERO11 Black-ACCL.csv'
+    GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
+    GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
     
     # Output files:
-    Combined_File = r'GX020188_HERO11 Black_Combined.csv'
-    filtered_combined_data_name = 'GX020188_HERO11 Black-Combined_filtered.csv'
+    Combined_File = f'{common_file_name} Black_Combined.csv'
+    filtered_combined_data_name = f'{common_file_name} Black-Combined_filtered.csv'
     
     sample_rate = 10         # 10 Hz
     # Columns settings
@@ -198,7 +199,7 @@ if __name__ == '__main__':
         combined_data_flt[col].plot(ax=axes[i], label = col)
         axes[i].legend([f'{col}'], loc='upper right')
         
-        units_dict = {veh_speed_flt_kph_col: 'kph', accel_long_flt_col:'m/s^2', accel_lat_flt_col:'m/s^2'}
+        units_dict = {veh_speed_flt_kph_col: 'kph', accel_long_flt_col:'m/s²', accel_lat_flt_col:'m/s²'}
         axes[i].set_ylabel(f'{col} ({units_dict.get(col, "")})')
         axes[i].grid(True, linestyle='--', alpha=0.7)
         
@@ -212,18 +213,21 @@ if __name__ == '__main__':
     axes[-1].set_xlabel('Time (mm:ss)')
     
     # Define dynamic legends for subplot 2 and subplot 3
-    text_legend_2 = axes[1].text(0.82, 0.12, '', transform=axes[1].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
-    text_legend_3 = axes[2].text(0.82, 0.12, '', transform=axes[2].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
+    text_legend_2 = axes[1].text(0.78, 0.12, '', transform=axes[1].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
+    text_legend_3 = axes[2].text(0.78, 0.12, '', transform=axes[2].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
     
     
     # Update dynamic legends
     text_legend_2.set_text(f'Accel_Long: '
-                           f'\n{accel_long_btwn_count} times between {accel_long_thd_1} and {accel_long_thd_2}' 
-                           f'\n{accel_long_above_count} times above {accel_long_thd_2}')
+                           f'\n{accel_long_btwn_count} times between {accel_long_thd_1}m/s² and {accel_long_thd_2}m/s²' 
+                           f'\n{accel_long_above_count} times above {accel_long_thd_2}m/s²')
     text_legend_3.set_text(f'Accel_Lat: '
-                           f'\n{accel_lat_btwn_count} times between {accel_lat_thd_1} and {accel_lat_thd_2}' 
-                           f'\n{accel_lat_above_count} times above {accel_lat_thd_2}')
-    
+                           f'\n{accel_lat_btwn_count} times between {accel_lat_thd_1}m/s² and {accel_lat_thd_2}m/s²' 
+                           f'\n{accel_lat_above_count} times above {accel_lat_thd_2}m/s²')
+
+    # Add title to the figure
+    plt.suptitle(common_file_name)
+
     plt.tight_layout()
     plt.show()
 
