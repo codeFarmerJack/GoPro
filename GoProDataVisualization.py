@@ -43,21 +43,17 @@ def butter_lowpass_filter(data, cutoff_freq, sample_rate, order=4):
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return filtfilt(b, a, data)
 
-def data_filter(rawData, veh_speed, accl_long, accl_lat):
+def data_filter(rawData, veh_speed, accl_long, accl_lat, sample_rate, cutoff_freq, atten_order):
     # rawData: DataFrame containing the data to be filtered
     # veh_speed: column name of the vehichle speed to be filtered 
     # accl_long: column nanme of the longitudinal acceleraiton to be filtered 
     # accl_lat: column name of the lateral acceleration to be filtered 
     
-    cutoff_freq = 0.07      # Adjust this cutoff frequency as needed
-        # Increasing the cutoff frequency allows more higher-frequency components of the signal to 
-        #   pass through the filter, resulting in less filtering
-        # Decreasing the cutoff frequency filters out more high-frequency components, smoothing the
-        #   signal more aggressively
+        
     # Filter the raw data 
-    filtered_spdGopro = butter_lowpass_filter(rawData[veh_speed], cutoff_freq, sample_rate, order=3)
-    filtered_accLongGopro = butter_lowpass_filter(rawData[accl_long], cutoff_freq, sample_rate, order=3)
-    filtered_accLatGopro = butter_lowpass_filter(rawData[accl_lat], cutoff_freq, sample_rate, order=3)
+    filtered_spdGopro = butter_lowpass_filter(rawData[veh_speed], cutoff_freq, sample_rate, atten_order)
+    filtered_accLongGopro = butter_lowpass_filter(rawData[accl_long], cutoff_freq, sample_rate, atten_order)
+    filtered_accLatGopro = butter_lowpass_filter(rawData[accl_lat], cutoff_freq, sample_rate, atten_order)
     filtered_spdGoproKPH = filtered_spdGopro * 3.6
 
     # insert to the original DataFrame
@@ -137,6 +133,10 @@ def cnt_btwn_and_abv_thd(y_values, threshold_1, threshold_2, cooldown_duration =
     
     return btwn_threshold_count, above_threshold_2_count
 
+def adjust_offset(original_series, offset):
+    adjusted_series = original_series + offset
+    return adjusted_series
+
 if __name__ == '__main__':
 
     # Navigate to the folder with GoPro raw data
@@ -153,6 +153,20 @@ if __name__ == '__main__':
     filtered_combined_data_name = f'{common_file_name} Black-Combined_filtered.csv'
     
     sample_rate = 10         # 10 Hz
+    
+    # Low-pass filter parameter setting
+    cutoff_freq = 0.3   # cutoff frequency of filter 
+        # Adjust this cutoff frequency as needed
+        # Increasing the cutoff frequency allows more higher-frequency components of the signal to 
+        #   pass through the filter, resulting in less filtering
+        # Decreasing the cutoff frequency filters out more high-frequency components, smoothing the
+        #   signal more aggressively
+    atten_order = 3
+    
+    # Acceleration offset 
+    accel_long_offset = -0.78
+    accel_lat_offset = 0.48
+    
     # Columns settings
     raw_time_col = 'cts'
     index_name = 'timestamp'
@@ -163,6 +177,8 @@ if __name__ == '__main__':
     veh_speed_flt_kph_col = 'veh_speed_flt_kph'
     accel_long_flt_col = 'accel_long_flt'
     accel_lat_flt_col = 'accel_lat_flt'
+    accel_long_adj = 'accel_long_adj'
+    accel_lat_adj = 'accel_lat_adj'
     
     # Read data from csv to DataFrame and rename columns names
     raw_data_GPS = read_file(raw_data_folder_path, GoPro_GPS_Data)
@@ -179,43 +195,46 @@ if __name__ == '__main__':
                                  raw_data_ACCL_prep[accel_extraction], 
                                  left_index=True, right_index=True, how='inner')
 
-    combined_data_flt = data_filter(combined_data_raw, veh_speed_col, accel_long_col, accel_lat_col)
+    combined_data_flt = data_filter(combined_data_raw, veh_speed_col, accel_long_col, accel_lat_col, sample_rate, cutoff_freq , atten_order)
+    
+    # Adjust offset of acceleration
+    combined_data_flt[accel_long_adj] = adjust_offset(combined_data_flt[accel_long_flt_col], accel_long_offset)
+    combined_data_flt[accel_lat_adj] = adjust_offset(combined_data_flt[accel_lat_flt_col], accel_lat_offset)
     
     # Count the nubmer of times abs(accel_long) lies between (2, 4), and above 4
     accel_long_thd_1 = 2    # Unit: m/s^2
     accel_long_thd_2 = 4    # Unit: m/s^2 
-    accel_long_btwn_count, accel_long_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_long_flt_col], accel_long_thd_1, accel_long_thd_2)
+    accel_long_btwn_count, accel_long_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_long_adj], accel_long_thd_1, accel_long_thd_2)
 
     # Count the nubmer of times abs(accel_long) lies between (2, 3), and above 3
     accel_lat_thd_1 = 2     # Unit: m/s^2
     accel_lat_thd_2 = 3     # Unit: m/s^2
-    accel_lat_btwn_count, accel_lat_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_lat_flt_col], accel_lat_thd_1, accel_lat_thd_2)
+    accel_lat_btwn_count, accel_lat_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_lat_adj], accel_lat_thd_1, accel_lat_thd_2)
     
     save_dataframe_to_csv(combined_data_flt, filtered_combined_data_name)
     
     target_x_value = None    
     
     # Columns to be visualized
-    cols_to_visualize = [veh_speed_flt_kph_col, accel_long_flt_col, accel_lat_flt_col]
+    cols_to_visualize = [veh_speed_flt_kph_col, accel_long_adj, accel_lat_adj]
     
     fig, axes = plt.subplots(nrows=len(cols_to_visualize), ncols=1, figsize=(10, 6), sharex=True)
     
     # Connect the mouse click event to the callback function
     plt.gcf().canvas.mpl_connect('button_press_event', on_plot_click)
-    # mplcursors.cursor(hover = True).connect('add', on_plot_click)
     
     for i, col in enumerate(cols_to_visualize):
         combined_data_flt[col].plot(ax=axes[i], label = col)
         axes[i].legend([f'{col}'], loc='upper right')
         
-        units_dict = {veh_speed_flt_kph_col: 'kph', accel_long_flt_col:'m/s²', accel_lat_flt_col:'m/s²'}
+        units_dict = {veh_speed_flt_kph_col: 'kph', accel_long_adj:'m/s²', accel_lat_adj:'m/s²'}
         axes[i].set_ylabel(f'{col} ({units_dict.get(col, "")})')
         axes[i].grid(True, linestyle='--', alpha=0.7)
         
-        if col == accel_long_flt_col:
+        if col == accel_long_adj:
             axes[i].set_ylim(-4.1, 4.1)
             axes[i].set_yticks([-4, -2, 0, 2, 4])
-        elif col == accel_lat_flt_col:
+        elif col == accel_lat_adj:
             axes[i].set_ylim(-3.1, 3.1)
             axes[i].set_yticks([-3, -2, -1, 0, 1, 2, 3])
     
