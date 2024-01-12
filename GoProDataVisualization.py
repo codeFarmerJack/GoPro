@@ -3,7 +3,7 @@
 # 1. Read GPS data and Accelerometer into dataframes separately
 # 2. Convert 'cts' column of both dataframes into timestamps
 #     Formula: = A2/1000/86400  
-#     Format: 'mm:ss.000'
+#     Format: 'mm:ss.s'
 # 3. Align the two dataframes according to the converted 'cts' columns
 # 4. Process vehicle speed, longitudinal acceleration, lateral acceleration with low-pass filter
 # 5. Plot the filtered signals
@@ -245,18 +245,18 @@ if __name__ == '__main__':
         combined_data_flt[col].plot(ax=axes[i], label = col)
         axes[i].legend([f'{col}'], loc='upper right')
         
-        units_dict = {veh_speed_flt_kph_col: 'kph', accel_long_adj:'m/s²', accel_lat_adj:'m/s²'}
+        units_dict = {veh_speed_flt_kph_col: 'kph', accel_long_inv:'m/s²', accel_lat_inv:'m/s²'}
         axes[i].set_ylabel(f'{col} ({units_dict.get(col, "")})')
         axes[i].grid(True, linestyle='--', alpha=0.7)
         
-        if col == accel_long_adj:
+        if col == accel_long_inv:
             axes[i].set_ylim(-4.1, 4.1)
             axes[i].set_yticks([-4, -2, 0, 2, 4])
-        elif col == accel_lat_adj:
+        elif col == accel_lat_inv:
             axes[i].set_ylim(-3.1, 3.1)
             axes[i].set_yticks([-3, -2, -1, 0, 1, 2, 3])
     
-    axes[-1].set_xlabel('Time (mm:ss)')
+    axes[-1].set_xlabel('Time (mm:ss.s)')
     
     # Define dynamic legends for subplot 2 and subplot 3
     text_legend_2 = axes[1].text(0.78, 0.12, '', transform=axes[1].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
