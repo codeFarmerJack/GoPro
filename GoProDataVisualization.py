@@ -32,12 +32,7 @@ def read_file(data_foler, file_name):
     return file
 
 def butter_lowpass_filter(data, cutoff_freq, sample_rate, order=4):
-    # The filter order determines how steeply the filter attenuates frequencies beyond the cutoff
-    #   The higher filter order results in a steeper roll-off beyond the cutoff frequency but may
-    #   introduce more phase distortion.
-    #   A lower filter order provides a gentler roll-off but may not attenuate high frequencies 
-    #   as effectively.
-    # related link: https://www.elprocus.com/butterworth-filter-formula-and-calculations/
+
     nyquist = 0.5 * sample_rate     
     normal_cutoff = cutoff_freq / nyquist   
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
@@ -137,6 +132,13 @@ def adjust_offset(original_series, offset):
     adjusted_series = original_series + offset
     return adjusted_series
 
+def invert_signal(signal, invert = False):
+    if invert:
+        inverted_signal = [-value for value in signal]
+        return inverted_signal
+    else:
+        return signal
+
 if __name__ == '__main__':
 
     # Navigate to the folder with GoPro raw data
@@ -155,17 +157,27 @@ if __name__ == '__main__':
     sample_rate = 10         # 10 Hz
     
     # Low-pass filter parameter setting
-    cutoff_freq = 0.3   # cutoff frequency of filter 
+    cutoff_freq = 0.2   # cutoff frequency of filter 
         # Adjust this cutoff frequency as needed
         # Increasing the cutoff frequency allows more higher-frequency components of the signal to 
         #   pass through the filter, resulting in less filtering
         # Decreasing the cutoff frequency filters out more high-frequency components, smoothing the
         #   signal more aggressively
     atten_order = 3
-    
+        # The filter order determines how steeply the filter attenuates frequencies beyond the cutoff
+        #   The higher filter order results in a steeper roll-off beyond the cutoff frequency but may
+        #   introduce more phase distortion.
+        #   A lower filter order provides a gentler roll-off but may not attenuate high frequencies 
+        #   as effectively.
+        # related link: https://www.elprocus.com/butterworth-filter-formula-and-calculations/
+        
     # Acceleration offset 
     accel_long_offset = -0.78
     accel_lat_offset = 0.48
+    
+    # Specify if the sign of the signal is inverted
+    invert_flag_long = False
+    invert_flag_lat = False
     
     # Columns settings
     raw_time_col = 'cts'
@@ -179,6 +191,8 @@ if __name__ == '__main__':
     accel_lat_flt_col = 'accel_lat_flt'
     accel_long_adj = 'accel_long_adj'
     accel_lat_adj = 'accel_lat_adj'
+    accel_long_inv = 'accel_long_inv'
+    accel_lat_inv = 'accel_lat_inv'
     
     # Read data from csv to DataFrame and rename columns names
     raw_data_GPS = read_file(raw_data_folder_path, GoPro_GPS_Data)
@@ -201,22 +215,26 @@ if __name__ == '__main__':
     combined_data_flt[accel_long_adj] = adjust_offset(combined_data_flt[accel_long_flt_col], accel_long_offset)
     combined_data_flt[accel_lat_adj] = adjust_offset(combined_data_flt[accel_lat_flt_col], accel_lat_offset)
     
+    # Invert the sign of acceleration if invert_flag == True
+    combined_data_flt[accel_long_inv] = invert_signal(combined_data_flt[accel_long_adj], invert_flag_long)
+    combined_data_flt[accel_lat_inv] = invert_signal(combined_data_flt[accel_lat_adj], invert_flag_lat)
+    
     # Count the nubmer of times abs(accel_long) lies between (2, 4), and above 4
     accel_long_thd_1 = 2    # Unit: m/s^2
     accel_long_thd_2 = 4    # Unit: m/s^2 
-    accel_long_btwn_count, accel_long_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_long_adj], accel_long_thd_1, accel_long_thd_2)
+    accel_long_btwn_count, accel_long_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_long_inv], accel_long_thd_1, accel_long_thd_2)
 
     # Count the nubmer of times abs(accel_long) lies between (2, 3), and above 3
     accel_lat_thd_1 = 2     # Unit: m/s^2
     accel_lat_thd_2 = 3     # Unit: m/s^2
-    accel_lat_btwn_count, accel_lat_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_lat_adj], accel_lat_thd_1, accel_lat_thd_2)
+    accel_lat_btwn_count, accel_lat_above_count = cnt_btwn_and_abv_thd(combined_data_flt[accel_lat_inv], accel_lat_thd_1, accel_lat_thd_2)
     
     save_dataframe_to_csv(combined_data_flt, filtered_combined_data_name)
     
     target_x_value = None    
     
     # Columns to be visualized
-    cols_to_visualize = [veh_speed_flt_kph_col, accel_long_adj, accel_lat_adj]
+    cols_to_visualize = [veh_speed_flt_kph_col, accel_long_inv, accel_lat_inv]
     
     fig, axes = plt.subplots(nrows=len(cols_to_visualize), ncols=1, figsize=(10, 6), sharex=True)
     
