@@ -145,7 +145,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX020188_HERO11'
+    common_file_name = r'GX010194_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     sample_rate = 10         # 10 Hz
     
     # Low-pass filter parameter setting
-    cutoff_freq = 0.2   # cutoff frequency of filter 
+    cutoff_freq = 0.15   # cutoff frequency of filter 
         # Adjust this cutoff frequency as needed
         # Increasing the cutoff frequency allows more higher-frequency components of the signal to 
         #   pass through the filter, resulting in less filtering
@@ -207,7 +207,10 @@ if __name__ == '__main__':
     accel_extraction = [accel_long_col, accel_lat_col]
     combined_data_raw = pd.merge(raw_data_GPS_prep[speed_extraction], 
                                  raw_data_ACCL_prep[accel_extraction], 
-                                 left_index=True, right_index=True, how='inner')
+                                 left_index=True, right_index=True, how='right')
+    
+    # Fill NaN values with zero in the merged DataFrame
+    combined_data_raw = combined_data_raw.fillna(0)
 
     combined_data_flt = data_filter(combined_data_raw, veh_speed_col, accel_long_col, accel_lat_col, sample_rate, cutoff_freq , atten_order)
     

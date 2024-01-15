@@ -133,7 +133,7 @@ if __name__ == '__main__':
         ax.plot(timestamp, y_2, label=label_2)
         ax.plot(timestamp, y_1, label=label_1)
         
-        ax.legend(fontsize=5, loc='upper right')
+        ax.legend(fontsize=8, loc='upper right')
         # Set the y range 
         if label_1 == 'accel_long_GoPro_flt':
             ax.set_ylim(-4.5, 4.5)
