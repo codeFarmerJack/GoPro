@@ -10,6 +10,7 @@
 # 6. Update the bar to faclitate data analysis.
 
 import os
+import json
 import pandas as pd
 import numpy as np
 from scipy.signal import butter, filtfilt
@@ -138,6 +139,17 @@ def invert_signal(signal, invert = False):
         return inverted_signal
     else:
         return signal
+    
+def load_settings(json_file_path, current_settings):
+    try:
+        with open(json_file_path, 'r') as json_file:
+            loaded_settings = json.load(json_file)
+        return loaded_settings
+    except FileNotFoundError:
+        # If the file doesn't exist, save the current settings to a new JSON file
+        with open(json_file_path, 'w') as json_file:
+            json.dump(current_settings, json_file, indent=4)
+        return current_settings
 
 if __name__ == '__main__':
 
@@ -145,7 +157,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX010194_HERO11'
+    common_file_name = r'GX020188_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -172,12 +184,52 @@ if __name__ == '__main__':
         # related link: https://www.elprocus.com/butterworth-filter-formula-and-calculations/
         
     # Acceleration offset 
-    accel_long_offset = -0.78
-    accel_lat_offset = 0.48
+    accel_long_offset = 0
+    accel_lat_offset = 0
     
     # Specify if the sign of the signal is inverted
     invert_flag_long = False
     invert_flag_lat = False
+    
+    # Load settings from JSON file
+    json_file_path = f'{common_file_name}_settings.json'
+    current_settings = {
+        "common_file_name": common_file_name,
+        "raw_data_folder_path": raw_data_folder_path,
+        # Low-pass filter parameter setting
+        "cutoff_freq": cutoff_freq,
+        "atten_order": atten_order,
+        # Acceleration offset 
+        "accel_long_offset": accel_long_offset,
+        "accel_lat_offset": accel_lat_offset,
+        # Specify if the sign of the signal is inverted
+        "invert_flag_long": invert_flag_long,
+        "invert_flag_lat": invert_flag_lat                
+    }
+    loaded_settings = load_settings(json_file_path, current_settings)
+    
+    # Check if any setting has changed
+    settings_changed = False
+    for key, value in current_settings.items():
+        if loaded_settings.get(key) != value:
+            settings_changed = True
+            break
+
+    if settings_changed:
+        # Update variables with the new settings
+        common_file_name = loaded_settings["common_file_name"]
+        raw_data_folder_path = loaded_settings["raw_data_folder_path"]
+        cutoff_freq = loaded_settings["cutoff_freq"]
+        atten_order = loaded_settings["atten_order"]
+        accel_long_offset = loaded_settings["accel_long_offset"]
+        accel_lat_offset = loaded_settings["accel_lat_offset"]
+        invert_flag_long = loaded_settings["invert_flag_long"]
+        invert_flag_lat = loaded_settings["invert_flag_lat"]
+    
+        # Save to a new JSON file named after common_file_name
+        json_file_path = f'{common_file_name}_settings.json'
+        with open(json_file_path, 'w') as json_file:
+            json.dump(loaded_settings, json_file, indent=4)
     
     # Columns settings
     raw_time_col = 'cts'
