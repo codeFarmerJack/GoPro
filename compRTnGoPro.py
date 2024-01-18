@@ -116,9 +116,9 @@ if __name__ == '__main__':
     
     # Define the subplot layout
     subplot_layout = [
-        (data_flt[veh_spd_GoPro_flt], data_flt[veh_spd_RT], 'veh_spd_GoPro_flt', 'veh_spd_RT'),
-        (data_flt[accel_long_GoPro_inv], data_flt[accel_long_RT], 'accel_long_GoPro_flt', 'accel_long_RT'),
-        (data_flt[accel_lat_GoPro_inv], data_flt[accel_lat_RT], 'accel_lat_GoPro_flt', 'accel_lat_RT'),
+        (data_flt[veh_spd_GoPro_flt], data_flt[veh_spd_RT], 'veh_spd_GoPro_flt', 'veh_spd_RT_raw'),
+        (data_flt[accel_long_GoPro_inv], data_flt[accel_long_RT], 'accel_long_GoPro_flt', 'accel_long_RT_raw'),
+        (data_flt[accel_lat_GoPro_inv], data_flt[accel_lat_RT], 'accel_lat_GoPro_flt', 'accel_lat_RT_raw'),
         (data_flt[veh_spd_GoPro_flt], data_flt[veh_spd_RT_flt], 'veh_spd_GoPro_flt', 'veh_spd_RT_flt'),
         (data_flt[accel_long_GoPro_inv], data_flt[accel_long_RT_flt], 'accel_long_GoPro_flt', 'accel_long_RT_flt'),
         (data_flt[accel_lat_GoPro_inv], data_flt[accel_lat_RT_flt], 'accel_lat_GoPro_flt', 'accel_lat_RT_flt'),
