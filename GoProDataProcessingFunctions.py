@@ -151,6 +151,5 @@ def interval_filter(array, min_inverval=600):
         if next_element - current_element >= min_inverval:
             filtered_array.append(current_element)
     # Include the last element 
-    if len(array) >= 2 and (array[-1] - array[-2] >= 600):
-        filtered_array.append(array[-1])
+    filtered_array.append(array[-1])
     return filtered_array

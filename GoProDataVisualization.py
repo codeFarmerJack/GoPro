@@ -17,7 +17,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX020188_HERO11'
+    common_file_name = r'GX010193_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -88,8 +88,9 @@ if __name__ == '__main__':
     
         # Save to a new JSON file named after common_file_name
         json_file_path = f'{common_file_name}_settings.json'
-        with open(json_file_path, 'w') as json_file:
-            json.dump(loaded_settings, json_file, indent=4)
+        if os.path.isfile(GoPro_ACCL_Data):
+            with open(json_file_path, 'w') as json_file:
+                json.dump(loaded_settings, json_file, indent=4)
     
     # Columns settings
     raw_time_col = 'cts'
@@ -178,39 +179,32 @@ if __name__ == '__main__':
             axes[i].set_ylim(-3.1, 3.1)
             axes[i].set_yticks([-3, -2, -1, 0, 1, 2, 3])
     
-    axes[-1].set_xlabel('Time (mm:ss.s)')
+    axes[-1].set_xlabel('Time (mm:ss)')
     
     # Calculate the total duration of the signal
     total_duration_seconds = total_seconds[-1]
     
+    # Set the xtick intervals 
+    interval_length = 120   # Unit: s
     # Calculate the number of intervals with 60s spacing
-    num_intervals = int(total_duration_seconds / 60)
+    num_intervals = int(total_duration_seconds / interval_length)
     
-    unique_times = np.unique(total_seconds)
-    np.set_printoptions(precision=1, suppress=True)
-
-    xtick_positions_target = unique_times[::60 * sample_rate] 
-    print('xtick_positions_target: ', xtick_positions_target)
-    #filtered_positions_target = interval_filter(xtick_positions_target, min_inverval=500)
+    xtick_positions_target = np.array(range(0, (num_intervals+1) * interval_length, interval_length))
     
-    #print('filtered_positions_target: ', filtered_positions_target)
-    
+    # The indices of elements in total_seconds that present in xtick_positions_target
     xtick_positions_indices = np.where(np.isin(total_seconds, xtick_positions_target))
-    print('xtick_positions_indices: ', xtick_positions_indices)
-    
+    # Extract the first element of the tuple xtick_positions_indices[0], i.e. the array of indices
     indices_array = xtick_positions_indices[0]
-    print('indices_array: ',indices_array)
     
-    filtered_indices = interval_filter(indices_array, min_inverval=600)
-    print('filtered_indices: ', filtered_indices)
+    # The interval between two indices has to be at least min_interval
+    filtered_indices = interval_filter(indices_array, min_inverval=580)
     
+    # Determine the xtick position and labels
     xtick_positions = pd.Index(filtered_indices)
-    print('xtick_positions: ', xtick_positions)
-    
-    #xtick_labels = [f'{int(t) // 60:02d}:{int(t) % 60:02d}' for t in filtered_positions_target]
+    xtick_labels = [f'{int(seconds) // 60:02d}:{int(seconds) % 60:02d}' for seconds in xtick_positions_target]
 
     axes[-1].set_xticks(xtick_positions)
-    #axes[-1].set_xticklabels(xtick_labels)
+    axes[-1].set_xticklabels(xtick_labels, fontsize=8)
     
     # Rotate xtick labels for better readability
     axes[-1].tick_params(axis='x', rotation=45)
