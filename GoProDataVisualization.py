@@ -17,7 +17,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX010193_HERO11'
+    common_file_name = r'GX010188_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -51,44 +51,44 @@ if __name__ == '__main__':
     invert_flag_long = False
     invert_flag_lat = False
     
-    # Load settings from JSON file
-    json_file_path = f'{common_file_name}_settings.json'
-    current_settings = {
-        "common_file_name": common_file_name,
-        "raw_data_folder_path": raw_data_folder_path,
-        # Low-pass filter parameter setting
-        "cutoff_freq": cutoff_freq,
-        "atten_order": atten_order,
-        # Acceleration offset 
-        "accel_long_offset": accel_long_offset,
-        "accel_lat_offset": accel_lat_offset,
-        # Specify if the sign of the signal is inverted
-        "invert_flag_long": invert_flag_long,
-        "invert_flag_lat": invert_flag_lat                
-    }
-    loaded_settings = load_settings(json_file_path, current_settings)
-    
-    # Check if any setting has changed
-    settings_changed = False
-    for key, value in current_settings.items():
-        if loaded_settings.get(key) != value:
-            settings_changed = True
-            break
-
-    if settings_changed:
-        # Update variables with the new settings
-        common_file_name = loaded_settings["common_file_name"]
-        raw_data_folder_path = loaded_settings["raw_data_folder_path"]
-        cutoff_freq = loaded_settings["cutoff_freq"]
-        atten_order = loaded_settings["atten_order"]
-        accel_long_offset = loaded_settings["accel_long_offset"]
-        accel_lat_offset = loaded_settings["accel_lat_offset"]
-        invert_flag_long = loaded_settings["invert_flag_long"]
-        invert_flag_lat = loaded_settings["invert_flag_lat"]
-    
-        # Save to a new JSON file named after common_file_name
+    if os.path.isfile(GoPro_ACCL_Data):
+        # Load settings from JSON file
         json_file_path = f'{common_file_name}_settings.json'
-        if os.path.isfile(GoPro_ACCL_Data):
+        current_settings = {
+            "common_file_name": common_file_name,
+            "raw_data_folder_path": raw_data_folder_path,
+            # Low-pass filter parameter setting
+            "cutoff_freq": cutoff_freq,
+            "atten_order": atten_order,
+            # Acceleration offset 
+            "accel_long_offset": accel_long_offset,
+            "accel_lat_offset": accel_lat_offset,
+            # Specify if the sign of the signal is inverted
+            "invert_flag_long": invert_flag_long,
+            "invert_flag_lat": invert_flag_lat                
+        }
+        loaded_settings = load_settings(json_file_path, current_settings)
+        
+        # Check if any setting has changed
+        settings_changed = False
+        for key, value in current_settings.items():
+            if loaded_settings.get(key) != value:
+                settings_changed = True
+                break
+
+        if settings_changed:
+            # Update variables with the new settings
+            common_file_name = loaded_settings["common_file_name"]
+            raw_data_folder_path = loaded_settings["raw_data_folder_path"]
+            cutoff_freq = loaded_settings["cutoff_freq"]
+            atten_order = loaded_settings["atten_order"]
+            accel_long_offset = loaded_settings["accel_long_offset"]
+            accel_lat_offset = loaded_settings["accel_lat_offset"]
+            invert_flag_long = loaded_settings["invert_flag_long"]
+            invert_flag_lat = loaded_settings["invert_flag_lat"]
+        
+            # Save to a new JSON file named after common_file_name
+            json_file_path = f'{common_file_name}_settings.json'
             with open(json_file_path, 'w') as json_file:
                 json.dump(loaded_settings, json_file, indent=4)
     
@@ -186,7 +186,8 @@ if __name__ == '__main__':
     
     # Set the xtick intervals 
     interval_length = 120   # Unit: s
-    # Calculate the number of intervals with 60s spacing
+    
+    # Calculate the number of intervals with interval_length s spacing
     num_intervals = int(total_duration_seconds / interval_length)
     
     xtick_positions_target = np.array(range(0, (num_intervals+1) * interval_length, interval_length))
@@ -208,12 +209,10 @@ if __name__ == '__main__':
     
     # Rotate xtick labels for better readability
     axes[-1].tick_params(axis='x', rotation=45)
-    
-        
+       
     # Define dynamic legends for subplot 2 and subplot 3
     text_legend_2 = axes[1].text(0.78, 0.12, '', transform=axes[1].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
     text_legend_3 = axes[2].text(0.78, 0.12, '', transform=axes[2].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
-    
     
     # Update dynamic legends
     text_legend_2.set_text(f'Accel_Long: '
