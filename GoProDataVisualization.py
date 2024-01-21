@@ -17,7 +17,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX010188_HERO11'
+    common_file_name = r'GX010193_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -51,6 +51,7 @@ if __name__ == '__main__':
     invert_flag_long = False
     invert_flag_lat = False
     
+    # Load and save the json file only if the raw data file
     if os.path.isfile(GoPro_ACCL_Data):
         # Load settings from JSON file
         json_file_path = f'{common_file_name}_settings.json'
@@ -185,7 +186,7 @@ if __name__ == '__main__':
     total_duration_seconds = total_seconds[-1]
     
     # Set the xtick intervals 
-    interval_length = 120   # Unit: s
+    interval_length = 60   # Unit: s
     
     # Calculate the number of intervals with interval_length s spacing
     num_intervals = int(total_duration_seconds / interval_length)
@@ -211,8 +212,8 @@ if __name__ == '__main__':
     axes[-1].tick_params(axis='x', rotation=45)
        
     # Define dynamic legends for subplot 2 and subplot 3
-    text_legend_2 = axes[1].text(0.78, 0.12, '', transform=axes[1].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
-    text_legend_3 = axes[2].text(0.78, 0.12, '', transform=axes[2].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
+    text_legend_2 = axes[1].text(0.5, 0.12, '', transform=axes[1].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
+    text_legend_3 = axes[2].text(0.5, 0.12, '', transform=axes[2].transAxes, fontsize=8, verticalalignment='center', horizontalalignment='left')
     
     # Update dynamic legends
     text_legend_2.set_text(f'Accel_Long: '

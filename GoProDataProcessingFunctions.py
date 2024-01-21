@@ -51,6 +51,31 @@ def data_filter(rawData, veh_speed, accl_long, accl_lat, sample_rate, cutoff_fre
     
     return rawData 
 
+def get_y_value(ax, x_value):
+    line = ax.lines[0]
+    x_data = line.get_xdata()
+    y_data = line.get_ydata()
+    
+    # Find the index of the closest x-value in data
+    idx = (abs(x_data - x_value)).argmin()
+    
+    return y_data[idx]
+
+def update_bottom_right_text(ax, x_value, y_value):
+    # Assuming the last axis is the bottom right one
+    bottom_right_ax = ax
+    # Remove the existing text with "bottom_right_text" label
+    existing_texts = [text for text in bottom_right_ax.texts if 'bottom_right_text' in text.get_label()]
+    
+    for text in existing_texts:
+        text.remove()
+        
+    # Add new text with x and y values
+    bottom_right_ax.text(0.95, 0.05, f'X: {x_value:.2f}, Y:{y_value: .2f}',
+                         transform=bottom_right_ax.transAxes, color='red', fontsize=8,
+                         verticalalignment='bottom', horizontalalignment='right',
+                         label = 'bottom_right_text')
+
 # Function to draw cursor
 def draw_cursor(ax, x_values):
     for x in x_values:
@@ -68,8 +93,16 @@ def on_plot_click(event):
             existing_lines = [line for line in ax.lines if 'cursor' in line.get_label()]
             for line in existing_lines:
                 line.remove()
+                
+             # Remove the existing bottom right text with "bottom_right_text" label
+            existing_texts = [text for text in ax.texts if 'bottom_right_text' in text.get_label()]
+            for text in existing_texts:
+                text.remove()
+                
             # Draw a new cursor at the updated x-value
             draw_cursor(ax, x_values=[target_x_value])
+            y_values = get_y_value(ax, target_x_value)
+            update_bottom_right_text(ax, target_x_value, y_values)
             
         plt.gcf().canvas.draw()
 
@@ -103,9 +136,7 @@ def cnt_btwn_and_abv_thd(y_values, threshold_1, threshold_2, cooldown_duration =
                 above_threshold_2_count += 1
                 max_above_threshold_1 = 0   # reset the max_above_threshold_1 every time it is counted
                 cooldown_counter = cooldown_duration
-            #print('value: ', value)
-            #print('max_above_threshold_1: ', max_above_threshold_1)
-            #print('above_threshold_2_count: ', above_threshold_2_count)
+            
         elif state == 'above' and value > max_above_threshold_1:
             max_above_threshold_1 = value
         
