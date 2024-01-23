@@ -78,8 +78,8 @@ def update_bottom_right_text(ax, x_value, y_value):
 
 # Function to draw cursor
 def draw_cursor(ax, x_values):
-    for x in x_values:
-        ax.axvline(x = x, color = 'r', linestyle = '--', label = 'cursor')
+    
+    ax.axvline(x = x_values, color = 'r', linestyle = '--', label = 'cursor')
         
 # Callback function for mouse click event
 def on_plot_click(event):
@@ -100,7 +100,7 @@ def on_plot_click(event):
                 text.remove()
                 
             # Draw a new cursor at the updated x-value
-            draw_cursor(ax, x_values=[target_x_value])
+            draw_cursor(ax, x_values=target_x_value)
             y_values = get_y_value(ax, target_x_value)
             update_bottom_right_text(ax, target_x_value, y_values)
             
