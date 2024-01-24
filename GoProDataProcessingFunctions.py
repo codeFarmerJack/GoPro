@@ -62,30 +62,21 @@ def get_y_value(ax, x_value):
     return y_data[idx]
 
 def update_bottom_right_text(ax, x_value, y_value):
-    # Assuming the last axis is the bottom right one
-    bottom_right_ax = ax
+
     # Remove the existing text with "bottom_right_text" label
-    existing_texts = [text for text in bottom_right_ax.texts if 'bottom_right_text' in text.get_label()]
+    existing_texts = [text for text in ax.texts if 'bottom_right_text' in text.get_label()]
     
     for text in existing_texts:
         text.remove()
         
     # Add new text with x and y values
-    bottom_right_ax.text(0.95, 0.05, f'X: {x_value:.2f}, Y:{y_value: .2f}',
-                         transform=bottom_right_ax.transAxes, color='red', fontsize=8,
-                         verticalalignment='bottom', horizontalalignment='right',
-                         label = 'bottom_right_text')
-
-# Function to draw cursor
-def draw_cursor(ax, x_values):
+    ax.text(0.95, 0.05, f'X: {x_value:.2f}, Y:{y_value: .2f}', transform=ax.transAxes, color='red', fontsize=8,
+            verticalalignment='bottom', horizontalalignment='right',label = 'bottom_right_text')
     
-    ax.axvline(x = x_values, color = 'r', linestyle = '--', label = 'cursor')
-        
 # Callback function for mouse click event
 def on_plot_click(event):
     global target_x_value
     if event.inaxes is not None and event.button == 1:
-        
         target_x_value = event.xdata
 
         for ax in plt.gcf().get_axes():
@@ -100,13 +91,13 @@ def on_plot_click(event):
                 text.remove()
                 
             # Draw a new cursor at the updated x-value
-            draw_cursor(ax, x_values=target_x_value)
+            ax.axvline(x = target_x_value, color = 'r', linestyle = '--', label = 'cursor')
             y_values = get_y_value(ax, target_x_value)
             update_bottom_right_text(ax, target_x_value, y_values)
             
         plt.gcf().canvas.draw()
 
-# Format x-axis tick labels as 'mm::ss'
+# Format x-axis tick labels as 'mm:ss'
 def format_time_ticks(x, pos):
     minutes = int(x // 60)
     seconds = int(x % 60)

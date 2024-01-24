@@ -82,7 +82,7 @@ class DataProcessing:
         
         return btwn_thd_count, above_thd_2_count
     
-    def adjut_offset(original_series, offset):
+    def adjust_offset(self, original_series, offset):
         adjusted_series = original_series + offset
         return adjusted_series
     
@@ -94,7 +94,7 @@ class DataProcessing:
         else:
             return signal
     
-    def interval_filter(array, min_interval=600):
+    def interval_filter(self, array, min_interval):
         filtered_array = []
     
         for i in range(len(array)-1):

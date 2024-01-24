@@ -4,12 +4,20 @@ import matplotlib.pylab as plt
 
 class DataVisualization:
     
+    
+    
     def __init__(self):
         self.target_x_value = None
     
     @staticmethod
     def get_y_value(ax, x_value):
-        pass
+        line = ax.lines[0]
+        x_data = line.get_xdata()
+        y_data = line.get_ydata()
+        
+        # Find the index of the closest x-value in data
+        idx = (abs(x_data - x_value)).argmin()
+        return y_data[idx]
     
     @staticmethod
     def update_bottom_right_text(ax, x_value, y_value):
@@ -25,8 +33,7 @@ class DataVisualization:
                 verticalalignment='bottom', horizontalalignment='right',label = 'bottom_right_text')
     
     
-    @staticmethod
-    def on_the_plot(self, event):
+    def on_plot_click(self, event):
         
         if event.inaxes is not None and event.button == 1:
             

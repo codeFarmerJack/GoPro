@@ -4,9 +4,11 @@ import json
 import pandas as pd
 
 class DataIO:
+    
     def __init__(self, raw_data_folder_path, common_file_name):
         self.raw_data_folder_path = raw_data_folder_path
         self.common_file_name = common_file_name
+       
         
     def read_file(self, file_name):
         file_path = os.path.join(self.raw_data_folder_path, file_name)
@@ -30,6 +32,7 @@ class DataIO:
         
     def load_and_save_settings(self, GoPro_ACCL_Data, cutoff_freq, atten_order, 
                                accel_long_offset, accel_lat_offset, invert_flag_long, invert_flag_lat):
+        
         if os.path.isfile(GoPro_ACCL_Data):
             # Load settings from JSON file
             json_file_path = f'{self.common_file_name}_settings.json'
@@ -43,7 +46,9 @@ class DataIO:
                 'invert_flag_long': invert_flag_long,
                 'invert_flag_lat': invert_flag_lat
             }
-            loaded_settings = loaded_settings(json_file_path, current_settings)
+            loaded_settings = DataIO.load_settings(json_file_path, current_settings)
+            
+            print('loaded_settings: ', loaded_settings)
             
             # Check if any setting has changed
             settings_changed = False
@@ -52,8 +57,10 @@ class DataIO:
                     settings_changed = True
                     break
                 
+            print('settings_changed:', settings_changed)    
+            
             if settings_changed:
-                # Update variables with the new settings
+                # Update variables with the new settings from JSON file
                 self.common_file_name = loaded_settings['common_file_name']
                 self.raw_data_folder_path = loaded_settings['raw_data_folder_path']
                 cutoff_freq = loaded_settings['cutoff_freq']
@@ -67,4 +74,7 @@ class DataIO:
             json_file_path = f'{self.common_file_name}_settings.json'
             with open(json_file_path, 'w') as json_file:
                 json.dump(loaded_settings, json_file, indent = 4)
+                
+            # Return the updated settings
+            return loaded_settings
                 
