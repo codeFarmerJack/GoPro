@@ -30,7 +30,7 @@ class DataIO:
                 json.dump(current_settings, json_file, indent = 4)
             return current_settings
         
-    def load_and_save_settings(self, GoPro_ACCL_Data, cutoff_freq, atten_order, 
+    def load_and_save_settings(self, GoPro_ACCL_Data, cutoff_freq, atten_order, interval_length,
                                accel_long_offset, accel_lat_offset, invert_flag_long, invert_flag_lat):
         
         if os.path.isfile(GoPro_ACCL_Data):
@@ -44,7 +44,8 @@ class DataIO:
                 'accel_long_offset': accel_long_offset,
                 'accel_lat_offset': accel_lat_offset,
                 'invert_flag_long': invert_flag_long,
-                'invert_flag_lat': invert_flag_lat
+                'invert_flag_lat': invert_flag_lat,
+                'interval_length': interval_length
             }
             loaded_settings = DataIO.load_settings(json_file_path, current_settings)
             
@@ -65,6 +66,7 @@ class DataIO:
                 accel_lat_offset = loaded_settings['accel_lat_offset']
                 invert_flag_long = loaded_settings['invert_flag_long']
                 invert_flag_lat = loaded_settings['invert_flag_lat']
+                interval_length = loaded_settings['interval_length']
                 
             # Save to a new JSON file named after common_file_name
             json_file_path = f'{self.common_file_name}_settings.json'

@@ -1,4 +1,3 @@
-
 import os
 import pandas as pd
 import numpy as np
@@ -8,12 +7,11 @@ from gopro_data_processing import DataProcessing
 from gopro_data_visualization import DataVisualization
 
 if __name__ == '__main__':
-
     # Navigate to the folder with GoPro raw data
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX010193_HERO11'
+    common_file_name = r'GX020188_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -50,11 +48,10 @@ if __name__ == '__main__':
     data_io = DataIO(raw_data_folder_path, common_file_name)
     # Object designed to filter and adjust signals (offset, invert)
     data_processing = DataProcessing()
-    # Object designed to visualize the final result of data processing
-    data_visualization = DataVisualization()
+    
     
     # Load and save settings using DataIO method
-    loaded_settings = data_io.load_and_save_settings(GoPro_ACCL_Data, cutoff_freq, atten_order,
+    loaded_settings = data_io.load_and_save_settings(GoPro_ACCL_Data, cutoff_freq, atten_order, interval_length, 
                                                  accel_long_offset, accel_lat_offset, invert_flag_long, invert_flag_lat)
 
     # Update the variables with the new settings
@@ -64,6 +61,7 @@ if __name__ == '__main__':
     accel_lat_offset = loaded_settings['accel_lat_offset']
     invert_flag_long = loaded_settings['invert_flag_long']
     invert_flag_lat = loaded_settings['invert_flag_lat']
+    interval_length = loaded_settings['interval_length']
     
     # Columns settings
     raw_time_col = 'cts'
@@ -122,7 +120,8 @@ if __name__ == '__main__':
     
     data_io.save_dataframe_to_csv(combined_data_flt, filtered_combined_data_name)
     
-    target_x_value = None    
+    # Object designed to visualize the final result of data processing
+    data_visualization = DataVisualization(total_seconds)
     
     # Columns to be visualized
     cols_to_visualize = [veh_speed_flt_kph_col, accel_long_inv, accel_lat_inv]
@@ -190,12 +189,9 @@ if __name__ == '__main__':
 
     # Add title to the figure
     plt.suptitle(common_file_name)
-
     plt.tight_layout()
-    
     # Save the figure
     plt.savefig(f'{common_file_name}_figure.png')
-    
     plt.show()
 
     
