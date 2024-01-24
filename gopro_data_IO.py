@@ -48,16 +48,12 @@ class DataIO:
             }
             loaded_settings = DataIO.load_settings(json_file_path, current_settings)
             
-            print('loaded_settings: ', loaded_settings)
-            
             # Check if any setting has changed
             settings_changed = False
             for key, value in current_settings.items():
                 if loaded_settings.get(key) != value:
                     settings_changed = True
                     break
-                
-            print('settings_changed:', settings_changed)    
             
             if settings_changed:
                 # Update variables with the new settings from JSON file

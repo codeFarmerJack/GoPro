@@ -36,8 +36,21 @@ if __name__ == '__main__':
     invert_flag_long = False
     invert_flag_lat = False
     
+    # Count the nubmer of times abs(accel_long) lies between (2, 4), and above 4
+    accel_long_thd_1 = 2    # Unit: m/s^2
+    accel_long_thd_2 = 4    # Unit: m/s^2 
+    # Count the nubmer of times abs(accel_long) lies between (2, 3), and above 3
+    accel_lat_thd_1 = 2     # Unit: m/s^2
+    accel_lat_thd_2 = 3     # Unit: m/s^2
+    
+    # Set the xtick intervals 
+    interval_length = 60   # Unit: s
+    
+    # Object designed to process data input and output
     data_io = DataIO(raw_data_folder_path, common_file_name)
+    # Object designed to filter and adjust signals (offset, invert)
     data_processing = DataProcessing()
+    # Object designed to visualize the final result of data processing
     data_visualization = DataVisualization()
     
     # Load and save settings using DataIO method
@@ -51,9 +64,6 @@ if __name__ == '__main__':
     accel_lat_offset = loaded_settings['accel_lat_offset']
     invert_flag_long = loaded_settings['invert_flag_long']
     invert_flag_lat = loaded_settings['invert_flag_lat']
-    
-    print('invert_flag_long:', invert_flag_long)
-    print('invert_flag_lat:', invert_flag_lat)
     
     # Columns settings
     raw_time_col = 'cts'
@@ -106,14 +116,8 @@ if __name__ == '__main__':
     combined_data_flt[accel_long_inv] = data_processing.invert_signal(combined_data_flt[accel_long_adj], invert_flag_long)
     combined_data_flt[accel_lat_inv] = data_processing.invert_signal(combined_data_flt[accel_lat_adj], invert_flag_lat)
     
-    # Count the nubmer of times abs(accel_long) lies between (2, 4), and above 4
-    accel_long_thd_1 = 2    # Unit: m/s^2
-    accel_long_thd_2 = 4    # Unit: m/s^2 
+    # Count the occurrences of acceleation values within a range and exceeding a threshold
     accel_long_btwn_count, accel_long_above_count = data_processing.cnt_btwn_and_abv_thd(combined_data_flt[accel_long_inv], accel_long_thd_1, accel_long_thd_2)
-
-    # Count the nubmer of times abs(accel_long) lies between (2, 3), and above 3
-    accel_lat_thd_1 = 2     # Unit: m/s^2
-    accel_lat_thd_2 = 3     # Unit: m/s^2
     accel_lat_btwn_count, accel_lat_above_count = data_processing.cnt_btwn_and_abv_thd(combined_data_flt[accel_lat_inv], accel_lat_thd_1, accel_lat_thd_2)
     
     data_io.save_dataframe_to_csv(combined_data_flt, filtered_combined_data_name)
@@ -147,9 +151,6 @@ if __name__ == '__main__':
     
     # Calculate the total duration of the signal
     total_duration_seconds = total_seconds[-1]
-    
-    # Set the xtick intervals 
-    interval_length = 60   # Unit: s
     
     # Calculate the number of intervals with interval_length s spacing
     num_intervals = int(total_duration_seconds / interval_length)

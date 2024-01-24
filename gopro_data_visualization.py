@@ -29,7 +29,7 @@ class DataVisualization:
             text.remove()
             
         # Add new text with x and y values
-        ax.text(0.95, 0.05, f'X: {x_value:.2f}, Y:{y_value: .2f}', transform=ax.transAxes, color='red', fontsize=8,
+        ax.text(0.98, 0.02, f'X: {x_value:.2f}, Y:{y_value: .2f}', transform=ax.transAxes, color='red', fontsize=8,
                 verticalalignment='bottom', horizontalalignment='right',label = 'bottom_right_text')
     
     
@@ -67,3 +67,4 @@ class DataVisualization:
         seconds = int(x % 60)
         return f'{minutes:02d}:{seconds:02d}'
         
+    
