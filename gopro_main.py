@@ -91,27 +91,23 @@ if __name__ == '__main__':
         # Read data from csv to DataFrame and rename columns names
         raw_data_GPS = data_io.read_file(GoPro_GPS_Data)
         raw_data_ACCL = data_io.read_file(GoPro_ACCL_Data)
-        
         # Convert 'cts' column to timestamps
         raw_data_GPS_prep = data_processing.timestamp_gen(raw_data_GPS, raw_time_col)
         raw_data_ACCL_prep = data_processing.timestamp_gen(raw_data_ACCL, raw_time_col)
-    
         # Extract speed, acceleration and combine them into one dataframe.
-
         combined_data_raw = pd.merge(raw_data_GPS_prep[speed_extraction], 
                                     raw_data_ACCL_prep[accel_extraction], 
                                     left_index=True, right_index=True, how='right')
+    elif exist_GPS:               # Only GPS file exist
+        raw_data_GPS = data_io.read_file(GoPro_GPS_Data)
+        raw_data_GPS_prep = data_processing.timestamp_gen(raw_data_GPS, raw_time_col)
+        combined_data_raw = raw_data_GPS_prep[speed_extraction]
+    elif exist_ACCL:            # Only Accelerometer file exist
+        raw_data_ACCL = data_io.read_file(GoPro_ACCL_Data)
+        raw_data_ACCL_prep = data_processing.timestamp_gen(raw_data_ACCL, raw_time_col)  
+        combined_data_raw = raw_data_ACCL_prep[accel_extraction]
     else:
-        if exist_GPS:               # Only GPS file exist
-            raw_data_GPS = data_io.read_file(GoPro_GPS_Data)
-            raw_data_GPS_prep = data_processing.timestamp_gen(raw_data_GPS, raw_time_col)
-            combined_data_raw = raw_data_GPS_prep[speed_extraction]
-        elif exist_ACCL:            # Only Accelerometer file exist
-            raw_data_ACCL = data_io.read_file(GoPro_ACCL_Data)
-            raw_data_ACCL_prep = data_processing.timestamp_gen(raw_data_ACCL, raw_time_col)  
-            combined_data_raw = raw_data_ACCL_prep[accel_extraction]
-        else:
-            raise FileNotFoundError("No valid input file found.")  
+        raise FileNotFoundError("No valid input file found.")  
     
     # Fill NaN values with zero in the merged DataFrame
     combined_data_raw = combined_data_raw.fillna(0)
