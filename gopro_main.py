@@ -11,7 +11,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX020188_HERO11'
+    common_file_name = r'GX010194_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -20,10 +20,15 @@ if __name__ == '__main__':
     Combined_File = f'{common_file_name} Black_Combined.csv'
     filtered_combined_data_name = f'{common_file_name} Black-Combined_filtered.csv'
     
+    # Check if files exist before further processing
+    exist_GPS = os.path.exists(GoPro_GPS_Data)
+    exist_ACCL = os.path.exists(GoPro_ACCL_Data)
+    exist_file = exist_GPS or exist_ACCL
+    
     sample_rate = 10         # 10 Hz
     
     # Low-pass filter parameter setting
-    cutoff_freq = 0.15   # cutoff frequency of filter 
+    cutoff_freq = 0.12   # cutoff frequency of filter 
     atten_order = 3
     
     # Acceleration offset 
@@ -47,11 +52,11 @@ if __name__ == '__main__':
     # Object designed to process data input and output
     data_io = DataIO(raw_data_folder_path, common_file_name)
     # Object designed to filter and adjust signals (offset, invert)
-    data_processing = DataProcessing()
+    data_processing = DataProcessing(exist_GPS, exist_ACCL)
     
     
     # Load and save settings using DataIO method
-    loaded_settings = data_io.load_and_save_settings(GoPro_ACCL_Data, cutoff_freq, atten_order, interval_length, 
+    loaded_settings = data_io.load_and_save_settings(exist_file, cutoff_freq, atten_order, interval_length, 
                                                  accel_long_offset, accel_lat_offset, invert_flag_long, invert_flag_lat)
 
     # Update the variables with the new settings
@@ -78,20 +83,35 @@ if __name__ == '__main__':
     accel_long_inv = 'accel_long_inv'
     accel_lat_inv = 'accel_lat_inv'
     
-    # Read data from csv to DataFrame and rename columns names
-    raw_data_GPS = data_io.read_file(GoPro_GPS_Data)
-    raw_data_ACCL = data_io.read_file(GoPro_ACCL_Data)
-    
-    # Convert 'cts' column to timestamps
-    raw_data_GPS_prep = data_processing.timestamp_gen(raw_data_GPS, raw_time_col)
-    raw_data_ACCL_prep = data_processing.timestamp_gen(raw_data_ACCL, raw_time_col)
-    
-    # Extract speed, acceleration and combine them into one dataframe.
+    # Columns to be extracted from raw files
     speed_extraction = [veh_speed_col]
     accel_extraction = [accel_long_col, accel_lat_col]
-    combined_data_raw = pd.merge(raw_data_GPS_prep[speed_extraction], 
-                                 raw_data_ACCL_prep[accel_extraction], 
-                                 left_index=True, right_index=True, how='right')
+    
+    if exist_GPS and exist_ACCL:
+        # Read data from csv to DataFrame and rename columns names
+        raw_data_GPS = data_io.read_file(GoPro_GPS_Data)
+        raw_data_ACCL = data_io.read_file(GoPro_ACCL_Data)
+        
+        # Convert 'cts' column to timestamps
+        raw_data_GPS_prep = data_processing.timestamp_gen(raw_data_GPS, raw_time_col)
+        raw_data_ACCL_prep = data_processing.timestamp_gen(raw_data_ACCL, raw_time_col)
+    
+        # Extract speed, acceleration and combine them into one dataframe.
+
+        combined_data_raw = pd.merge(raw_data_GPS_prep[speed_extraction], 
+                                    raw_data_ACCL_prep[accel_extraction], 
+                                    left_index=True, right_index=True, how='right')
+    else:
+        if exist_GPS:               # Only GPS file exist
+            raw_data_GPS = data_io.read_file(GoPro_GPS_Data)
+            raw_data_GPS_prep = data_processing.timestamp_gen(raw_data_GPS, raw_time_col)
+            combined_data_raw = raw_data_GPS_prep[speed_extraction]
+        elif exist_ACCL:            # Only Accelerometer file exist
+            raw_data_ACCL = data_io.read_file(GoPro_ACCL_Data)
+            raw_data_ACCL_prep = data_processing.timestamp_gen(raw_data_ACCL, raw_time_col)  
+            combined_data_raw = raw_data_ACCL_prep[accel_extraction]
+        else:
+            raise FileNotFoundError("No valid input file found.")  
     
     # Fill NaN values with zero in the merged DataFrame
     combined_data_raw = combined_data_raw.fillna(0)

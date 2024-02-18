@@ -30,10 +30,10 @@ class DataIO:
                 json.dump(current_settings, json_file, indent = 4)
             return current_settings
         
-    def load_and_save_settings(self, GoPro_ACCL_Data, cutoff_freq, atten_order, interval_length,
+    def load_and_save_settings(self, exist_file, cutoff_freq, atten_order, interval_length,
                                accel_long_offset, accel_lat_offset, invert_flag_long, invert_flag_lat):
         
-        if os.path.isfile(GoPro_ACCL_Data):
+        if exist_file:
             # Load settings from JSON file
             json_file_path = f'{self.common_file_name}_settings.json'
             current_settings = {

@@ -27,6 +27,7 @@ class DataVisualization:
         # Display average value if both left-click and right-click happen
         if x_left is not None and x_right is not None:
             
+            # Convert the mouse click index into actual timestamp
             x_value_left = DataVisualization.x_series[int(x_left)]
             x_value_right = DataVisualization.x_series[int(x_right)]
             

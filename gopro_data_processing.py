@@ -1,10 +1,11 @@
-
 import pandas as pd
 from scipy.signal import butter, filtfilt
 
 
 class DataProcessing:
-    
+    def __init__(self, exist_GPS = False, exist_ACCL = False):
+        self.exist_GPS = exist_GPS
+        self.exist_ACCL = exist_ACCL
     
     @staticmethod
     def timestamp_gen(raw_data, raw_time_col):
@@ -28,19 +29,30 @@ class DataProcessing:
         # accl_long: column nanme of the longitudinal acceleraiton to be filtered 
         # accl_lat: column name of the lateral acceleration to be filtered 
         
+        if self.exist_ACCL:
+            # Filter the raw data 
+            filtered_accLongGopro = self.butter_lowpass_filter(raw_data[accel_long], cutoff_freq, sample_rate, order)
+            filtered_accLatGopro = self.butter_lowpass_filter(raw_data[accel_lat], cutoff_freq, sample_rate, order)
+            # insert to the original DataFrame
+            raw_data.insert(loc=len(raw_data.columns), column = 'accel_long_flt', value=filtered_accLongGopro)
+            raw_data.insert(loc=len(raw_data.columns), column = 'accel_lat_flt', value=filtered_accLatGopro)
+        else:
+            # Set all the longitudinal and lateral acceleration as 0 if ACCL file not found
+            raw_data['accel_long_flt'] = 0
+            raw_data['accel_lat_flt'] = 0
             
-        # Filter the raw data 
-        filtered_spdGopro = self.butter_lowpass_filter(raw_data[veh_speed], cutoff_freq, sample_rate, order)
-        filtered_accLongGopro = self.butter_lowpass_filter(raw_data[accel_long], cutoff_freq, sample_rate, order)
-        filtered_accLatGopro = self.butter_lowpass_filter(raw_data[accel_lat], cutoff_freq, sample_rate, order)
-        filtered_spdGoproKPH = filtered_spdGopro * 3.6
-
-        # insert to the original DataFrame
-        raw_data.insert(loc=len(raw_data.columns), column = 'veh_speed_flt_m/s', value=filtered_spdGopro)
-        raw_data.insert(loc=len(raw_data.columns), column = 'veh_speed_flt_kph', value=filtered_spdGoproKPH)
-        raw_data.insert(loc=len(raw_data.columns), column = 'accel_long_flt', value=filtered_accLongGopro)
-        raw_data.insert(loc=len(raw_data.columns), column = 'accel_lat_flt', value=filtered_accLatGopro)
-        
+        if self.exist_GPS:
+            # Filter the raw data 
+            filtered_spdGopro = self.butter_lowpass_filter(raw_data[veh_speed], cutoff_freq, sample_rate, order)
+            filtered_spdGoproKPH = filtered_spdGopro * 3.6
+            # insert to the original DataFrame
+            raw_data.insert(loc=len(raw_data.columns), column = 'veh_speed_flt_m/s', value=filtered_spdGopro)
+            raw_data.insert(loc=len(raw_data.columns), column = 'veh_speed_flt_kph', value=filtered_spdGoproKPH)
+        else:
+            # Set vehicle speed as 0 if GPS file not found
+            raw_data['veh_speed_flt_m/s'] = 0
+            raw_data['veh_speed_flt_kph'] = 0
+                    
         return raw_data 
     
     @staticmethod
