@@ -30,8 +30,9 @@ class DataIO:
                 json.dump(current_settings, json_file, indent = 4)
             return current_settings
         
-    def load_and_save_settings(self, exist_file, cutoff_freq, atten_order, interval_length,
-                               accel_long_offset, accel_lat_offset, invert_flag_long, invert_flag_lat):
+    def load_and_save_settings(self, exist_file, cutoff_freq, atten_order, interval_length, auto_adapt,
+                               accel_long_offset_man, accel_lat_offset_man, accel_long_offset_auto, accel_lat_offset_auto,
+                               invert_flag_long, invert_flag_lat):
         
         if exist_file:
             # Load settings from JSON file
@@ -41,8 +42,11 @@ class DataIO:
                 'raw_data_folder_path': self.raw_data_folder_path,
                 'cutoff_freq': cutoff_freq,
                 'atten_order': atten_order,
-                'accel_long_offset': accel_long_offset,
-                'accel_lat_offset': accel_lat_offset,
+                'auto_adapt': auto_adapt,
+                'accel_long_offset_man': accel_long_offset_man,
+                'accel_lat_offset_man': accel_lat_offset_man,
+                'accel_long_offset_auto': accel_long_offset_auto,
+                'accel_lat_offset_auto': accel_lat_offset_auto,
                 'invert_flag_long': invert_flag_long,
                 'invert_flag_lat': invert_flag_lat,
                 'interval_length': interval_length
@@ -62,8 +66,9 @@ class DataIO:
                 self.raw_data_folder_path = loaded_settings['raw_data_folder_path']
                 cutoff_freq = loaded_settings['cutoff_freq']
                 atten_order = loaded_settings['atten_order']
-                accel_long_offset = loaded_settings['accel_long_offset']
-                accel_lat_offset = loaded_settings['accel_lat_offset']
+                auto_adapt = loaded_settings['auto_adapt']
+                accel_long_offset_man = loaded_settings['accel_long_offset_man']
+                accel_lat_offset_man = loaded_settings['accel_lat_offset_man']
                 invert_flag_long = loaded_settings['invert_flag_long']
                 invert_flag_lat = loaded_settings['invert_flag_lat']
                 interval_length = loaded_settings['interval_length']
@@ -76,3 +81,16 @@ class DataIO:
             # Return the updated settings
             return loaded_settings
                 
+    def add_content_to_json(self, new_content):
+        json_file_path = f'{self.common_file_name}_settings.json'
+        
+        # Load existing settings from JSON file
+        with open(json_file_path, 'r') as json_file:
+            existing_content = json.load(json_file)
+            
+        # Append new content to existing settings
+        existing_content.update(new_content)
+        
+        # Write updated content back to the JSON file 
+        with open(json_file_path, 'w') as json_file:
+            json.dump(existing_content, json_file, indent = 4)

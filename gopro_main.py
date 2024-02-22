@@ -11,7 +11,7 @@ if __name__ == '__main__':
     raw_data_folder_path = r"/Users/jackwong/02_Coding/00_repo/01_GoPro/RawData"
     os.chdir(raw_data_folder_path)
     
-    common_file_name = r'GX010194_HERO11'
+    common_file_name = r'GX010188_HERO11'
     # Input files
     GoPro_GPS_Data = f'{common_file_name} Black-GPS9.csv'
     GoPro_ACCL_Data = f'{common_file_name} Black-ACCL.csv'
@@ -27,13 +27,18 @@ if __name__ == '__main__':
     
     sample_rate = 10         # 10 Hz
     
+    auto_adapt = True  # Acceleration auto adaptation
+    
     # Low-pass filter parameter setting
     cutoff_freq = 0.12   # cutoff frequency of filter 
     atten_order = 3
     
     # Acceleration offset 
-    accel_long_offset = 0
-    accel_lat_offset = 0
+    accel_long_offset_man = 0
+    accel_lat_offset_man = 0
+    # Acceleration offset auto-generated
+    accel_long_offset_auto = 0
+    accel_lat_offset_auto = 0
     
     # Specify if the sign of the signal is inverted
     invert_flag_long = False
@@ -56,17 +61,19 @@ if __name__ == '__main__':
     
     
     # Load and save settings using DataIO method
-    loaded_settings = data_io.load_and_save_settings(exist_file, cutoff_freq, atten_order, interval_length, 
-                                                 accel_long_offset, accel_lat_offset, invert_flag_long, invert_flag_lat)
+    loaded_settings = data_io.load_and_save_settings(exist_file, cutoff_freq, atten_order, interval_length, auto_adapt,
+                                                 accel_long_offset_man, accel_lat_offset_man, accel_long_offset_auto, accel_lat_offset_auto,
+                                                 invert_flag_long, invert_flag_lat)
 
     # Update the variables with the new settings
     cutoff_freq = loaded_settings['cutoff_freq']
     atten_order = loaded_settings['atten_order']
-    accel_long_offset = loaded_settings['accel_long_offset']
-    accel_lat_offset = loaded_settings['accel_lat_offset']
+    accel_long_offset_man = loaded_settings['accel_long_offset_man']
+    accel_lat_offset_man = loaded_settings['accel_lat_offset_man']
     invert_flag_long = loaded_settings['invert_flag_long']
     invert_flag_lat = loaded_settings['invert_flag_lat']
     interval_length = loaded_settings['interval_length']
+    auto_adapt = loaded_settings['auto_adapt']
     
     # Columns settings
     raw_time_col = 'cts'
@@ -122,9 +129,31 @@ if __name__ == '__main__':
     time_component = timestamp_datetime - pd.to_datetime(timestamp_datetime.date)
     total_seconds = time_component.total_seconds()
     
+    # Calculate offset of acceleration 
+    accel_long_offset_auto = data_processing.offset_calc(combined_data_flt[accel_long_flt_col], combined_data_flt[veh_speed_flt_kph_col])
+    accel_lat_offset_auto = data_processing.offset_calc(combined_data_flt[accel_lat_flt_col], combined_data_flt[veh_speed_flt_kph_col])
+    
+    # Round these two values
+    accel_long_offset_auto = round(accel_long_offset_auto, 2)
+    accel_lat_offset_auto = round(accel_lat_offset_auto, 2)
+    
+    # Add the auto_calculated offset to the json file
+    new_accel_long_offset = {'accel_long_offset_auto': accel_long_offset_auto}
+    new_accel_lat_offset = {'accel_lat_offset_auto': accel_lat_offset_auto}
+    data_io.add_content_to_json(new_accel_long_offset)
+    data_io.add_content_to_json(new_accel_lat_offset)
+    
+    # Specify which offset will be used manually input or auto calculation
+    if auto_adapt:
+        accel_long_offset = accel_long_offset_auto
+        accel_lat_offset = accel_lat_offset_auto
+    else:
+        accel_long_offset = accel_long_offset_man
+        accel_lat_offset = accel_lat_offset_man
+        
     # Adjust offset of acceleration
-    combined_data_flt[accel_long_adj] = data_processing.adjust_offset(combined_data_flt[accel_long_flt_col], accel_long_offset)
-    combined_data_flt[accel_lat_adj] = data_processing.adjust_offset(combined_data_flt[accel_lat_flt_col], accel_lat_offset)
+    combined_data_flt[accel_long_adj] = data_processing.offset_adjust(combined_data_flt[accel_long_flt_col], accel_long_offset)
+    combined_data_flt[accel_lat_adj] = data_processing.offset_adjust(combined_data_flt[accel_lat_flt_col], accel_lat_offset)
     
     # Invert the sign of acceleration if invert_flag == True
     combined_data_flt[accel_long_inv] = data_processing.invert_signal(combined_data_flt[accel_long_adj], invert_flag_long)

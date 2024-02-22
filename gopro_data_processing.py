@@ -94,7 +94,7 @@ class DataProcessing:
         
         return btwn_thd_count, above_thd_2_count
     
-    def adjust_offset(self, original_series, offset):
+    def offset_adjust(self, original_series, offset):
         adjusted_series = original_series + offset
         return adjusted_series
     
@@ -118,4 +118,22 @@ class DataProcessing:
         filtered_array.append(array[-1])
         return filtered_array
 
+    def offset_calc(self, acceleration, veh_speed):
+        sum_values = 0
+        count = 0
+        
+        for i in range(len(acceleration) - 1):
+            # calculate the offset only when veh_speed is zero and acceleration is constant
+            const_accel = abs(acceleration[i + 1] - acceleration[i]) < 0.015
+            if abs(veh_speed[i]) < 0.5 and const_accel:
+                sum_values += acceleration[i]
+                count += 1
+        
+        if count > 0 :
+            offset = - sum_values / count
+            return offset
+        else:
+            return None
+        
+        
     
